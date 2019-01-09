@@ -266,7 +266,6 @@ public class NIOPushListener implements Runnable {
 						cancelKey(key);
 						continue;
 					}
-//					System.out.println(task.toString());
 					task.setKey(key);
 					executor.execute(task);
 				} catch (Exception e) {
