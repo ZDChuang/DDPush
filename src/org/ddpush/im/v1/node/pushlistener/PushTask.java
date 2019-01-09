@@ -33,48 +33,48 @@ import org.ddpush.im.v1.node.NodeStatus;
 import org.ddpush.im.v1.node.PushMessage;
 
 public class PushTask implements Runnable {
-	
+
 	private NIOPushListener listener;
 	private SocketChannel channel;
 	private SelectionKey key;
 	private long lastActive;
 	private boolean isCancel = false;
-	
+
 	private boolean writePending = false;
 	private int maxContentLength;
 	private byte[] bufferArray;
 	private ByteBuffer buffer;
 	private int count;
-	
-	public PushTask(NIOPushListener listener, SocketChannel channel){
+
+	public PushTask(NIOPushListener listener, SocketChannel channel) {
 		this.listener = listener;
 		this.channel = channel;
 		maxContentLength = PropertyUtil.getPropertyInt("PUSH_MSG_MAX_CONTENT_LEN");
-		bufferArray = new byte[Constant.PUSH_MSG_HEADER_LEN+maxContentLength];
+		bufferArray = new byte[Constant.PUSH_MSG_HEADER_LEN + maxContentLength];
 		buffer = ByteBuffer.wrap(bufferArray);
 		buffer.limit(Constant.PUSH_MSG_HEADER_LEN);
 		lastActive = System.currentTimeMillis();
 	}
-	
-	public void setKey(SelectionKey key){
+
+	public void setKey(SelectionKey key) {
 		this.key = key;
 	}
-	
+
 	private void cancelKey(final SelectionKey key) {
 
-        Runnable r = new Runnable() {
-            public void run() {
-            	listener.cancelKey(key);
-            }
-        };
-        listener.addEvent(r);
-    }
-	
+		Runnable r = new Runnable() {
+			public void run() {
+				listener.cancelKey(key);
+			}
+		};
+		listener.addEvent(r);
+	}
+
 	private void registerForWrite(final SelectionKey key, final boolean needWrite) {
-		if(key == null || key.isValid() == false){
+		if (key == null || key.isValid() == false) {
 			return;
 		}
-		
+
 		if (needWrite == true) {
 			if ((key.interestOps() & SelectionKey.OP_WRITE) > 0) {
 				return;
@@ -84,133 +84,133 @@ public class PushTask implements Runnable {
 				return;
 			}
 		}
-		
+
 		Runnable r = new Runnable() {
-            public void run() {
-            	if(key == null || !key.isValid()){
-            		return;
-            	}
-            	key.selector().wakeup();
-            	if(needWrite == true){
-            		key.interestOps(key.interestOps()  & (~SelectionKey.OP_READ) | SelectionKey.OP_WRITE);
-            	}else{
-            		key.interestOps(key.interestOps() & (~SelectionKey.OP_WRITE) | SelectionKey.OP_READ);
-            	}
-            }
-        };
-        listener.addEvent(r);
-        try{
-        	key.selector().wakeup();
-        }catch(Exception e){
-        	e.printStackTrace();
-        }
+			public void run() {
+				if (key == null || !key.isValid()) {
+					return;
+				}
+				key.selector().wakeup();
+				if (needWrite == true) {
+					key.interestOps(key.interestOps() & (~SelectionKey.OP_READ) | SelectionKey.OP_WRITE);
+				} else {
+					key.interestOps(key.interestOps() & (~SelectionKey.OP_WRITE) | SelectionKey.OP_READ);
+				}
+			}
+		};
+		listener.addEvent(r);
+		try {
+			key.selector().wakeup();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public synchronized void run() {
-		if(listener == null || channel == null){
+		if (listener == null || channel == null) {
 			System.out.println("listener or channel null");
 			return;
 		}
-		
-		if(key == null){
+
+		if (key == null) {
 			System.out.println("key null");
 			return;
 		}
-		if(isCancel){
+		if (isCancel) {
 			System.out.println("canceled");
 			return;
 		}
-		try{
-			if(!writePending){
-				
-				if(key.isReadable()){
-					//read pkg
+		try {
+			if (!writePending) {
+
+				if (key.isReadable()) {
+					// read pkg
 					readReq();
-				}else{
+				} else {
 					// do nothing
 				}
-			}else{//has package
-				
+			} else {// has package
+
 				// try send pkg and place hasPkg=false
 				//
-				//register write ops if not enough buffer
-				//if(key.isWritable()){
-					writeRes();
-				//}
+				// register write ops if not enough buffer
+				// if(key.isWritable()){
+				writeRes();
+				// }
 			}
-		}catch(Exception e){
+		} catch (Exception e) {
 			cancelKey(key);
 			isCancel = true;
-		}catch(Throwable t){
+		} catch (Throwable t) {
 			cancelKey(key);
 			isCancel = true;
 		}
-		
+
 		key = null;
 		System.out.println(Thread.currentThread() + "---" + count + " end");
 
 	}
+
 	public String byteBufferToString(ByteBuffer buffer) {
 		CharBuffer charBuffer = null;
 		try {
-		Charset charset = Charset.forName("UTF-8");
-		CharsetDecoder decoder = charset.newDecoder();
-		charBuffer = decoder.decode(buffer);
-		buffer.flip();
-		return charBuffer.toString();
+			Charset charset = Charset.forName("UTF-8");
+			CharsetDecoder decoder = charset.newDecoder();
+			charBuffer = decoder.decode(buffer);
+			buffer.flip();
+			return charBuffer.toString();
 		} catch (Exception ex) {
-		ex.printStackTrace();
-		return null;
+			ex.printStackTrace();
+			return null;
 		}
 	}
-	
-	private void readReq() throws Exception{
-		if(this.writePending){
+
+	private void readReq() throws Exception {
+		if (this.writePending) {
 			return;
 		}
-		
-		if(channel.read(buffer) < 0){
+
+		if (channel.read(buffer) < 0) {
 			System.out.println("end of Stream");
 			throw new Exception("end of stream");
 		}
-		
-//		int limit = buffer.limit();
-//		int position = buffer.position();
-//System.out.println(Thread.currentThread() + "===" +  position + " " + limit + byteBufferToString(buffer) + "===");
-//		buffer.limit(limit);
-//		buffer.position(position);
 
-		if(this.calcWritePending() == false){
+		// int limit = buffer.limit();
+		// int position = buffer.position();
+		// System.out.println(Thread.currentThread() + "===" + position + " " + limit +
+		// byteBufferToString(buffer) + "===");
+		// buffer.limit(limit);
+		// buffer.position(position);
+
+		if (this.calcWritePending() == false) {
 			return;
-		}else{
+		} else {
 			byte res = 0;
-			try{
+			try {
 				processReq();
-			}catch(Exception e){
+			} catch (Exception e) {
 				res = 1;
-			}
-			catch(Throwable t){
+			} catch (Throwable t) {
 				res = -1;
 			}
-			
+
 			buffer.clear();
 			buffer.limit(1);
 			buffer.put(res);
 			buffer.flip();
-			
+
 			registerForWrite(key, true);
-			
+
 		}
-			
 
 		lastActive = System.currentTimeMillis();
 	}
-	
-	private void writeRes() throws Exception{
-		if(buffer.hasRemaining()){
+
+	private void writeRes() throws Exception {
+		if (buffer.hasRemaining()) {
 			channel.write(buffer);
-		}else{
+		} else {
 			buffer.clear();
 			buffer.limit(Constant.PUSH_MSG_HEADER_LEN);
 			this.writePending = false;
@@ -218,15 +218,15 @@ public class PushTask implements Runnable {
 		}
 		lastActive = System.currentTimeMillis();
 	}
-	
-	public long getLastActive(){
+
+	public long getLastActive() {
 		return lastActive;
 	}
-	
-	public boolean isWritePending(){
+
+	public boolean isWritePending() {
 		return writePending;
 	}
-	
+
 	private synchronized boolean calcWritePending() throws Exception {
 		if (!writePending) {
 			if (buffer.position() < Constant.PUSH_MSG_HEADER_LEN) {
@@ -259,37 +259,39 @@ public class PushTask implements Runnable {
 
 		return this.writePending;
 	}
-	
-	private void processReq() throws Exception{
-		//check and put data into nodeStat
+
+	private void processReq() throws Exception {
+		// check and put data into nodeStat
 		buffer.flip();
 		byte[] data = new byte[buffer.limit()];
 		System.arraycopy(bufferArray, 0, data, 0, buffer.limit());
-System.out.println("==============:" + new String(data, "UTF-8") + "===");
+		System.out.println("==============:" + new String(data, "UTF-8") + "===");
 
 		buffer.clear();
-		//this.writePending = false;//important
+		// this.writePending = false;//important
 		PushMessage pm = new PushMessage(data);
 		NodeStatus nodeStat = NodeStatus.getInstance();
-		String uuid = pm.getUuidHexString(); 
+		String uuid = pm.getUuidHexString();
 		ClientStatMachine csm = nodeStat.getClientStat(uuid);
-		if(csm == null){//
+		if (csm == null) {//
 			csm = ClientStatMachine.newByPushReq(pm);
-			if(csm == null){
+			if (csm == null) {
 				throw new Exception("can not new state machine");
 			}
 			nodeStat.putClientStat(uuid, csm);
-		}else{
-			try{csm.onPushMessage(pm);}catch(Exception e){};
+		} else {
+			try {
+				csm.onPushMessage(pm);
+			} catch (Exception e) {
+			}
+			;
 		}
 
 	}
 
 	@Override
 	public String toString() {
-		return super.toString() + " == " + this.channel  + " == " + this.key;
+		return super.toString() + " == " + this.channel + " == " + this.key;
 	}
-	
-	
 
 }
