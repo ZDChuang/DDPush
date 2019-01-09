@@ -90,7 +90,6 @@ public class NIOPushListener implements Runnable {
 		// Causes the first selection operation that has not yet returned to return
 		// immediately
 		events.add(event);
-
 		if (stoped == false && selector != null) {
 			selector.wakeup();
 		}
@@ -293,6 +292,8 @@ public class NIOPushListener implements Runnable {
 		}
 
 	}
+	
+	
 
 	/*
 	 * public static void main(String[] args) { class test implements Runnable {
