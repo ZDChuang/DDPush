@@ -251,13 +251,9 @@ public class NIOPushListener implements Runnable {
 					// channel.socket().setSendBufferSize(1024);
 					PushTask task = new PushTask(this, channel);
 					SelectionKey key2 = channel.register(selector, SelectionKey.OP_READ, task);
-					//local2
-					//remote
-					// local add
+					
 					System.out.println(key2.interestOps() +" -- " + " -- "+ key2.channel() + " -- "+ key2.selector());
  					System.out.println(channel.getLocalAddress() + " -- " + channel.getRemoteAddress());
-					// test
-					// add something
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
