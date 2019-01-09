@@ -220,31 +220,26 @@ public class NIOPushListener implements Runnable {
 		// This method performs a blocking selection operation. It returns only after at
 		// least one channel is selected, this selector's wakeup method is invoked, or
 		// the current thread is interrupted, whichever comes first.
-
+		
+		// Returns The number of keys, possibly zero,whose ready-operation sets were updated
 		if (selector.select() == 0) {
 			try {
-				Thread.sleep(1);
+				Thread.sleep(100);
 			} catch (Exception e) {
 
 			}
 			return;
 		}
 
-//		Set<SelectionKey> set = selector.selectedKeys();
-//		System.out.println("==== "+ set.size() + " Keys");
-//		for(SelectionKey s : set) {
-//			System.out.print(s.interestOps() + "-" + s.readyOps() + "  ");
-//		}
-//		System.out.println();
 		// public static final int OP_READ = 1;
 		// public static final int OP_WRITE = 4;
 		// public static final int OP_CONNECT = 8;
 		// public static final int OP_ACCEPT = 16;
-		
+		int number = 0;
 		Iterator<SelectionKey> it = selector.selectedKeys().iterator();
 		while (it.hasNext()) {
 			SelectionKey key = it.next();
-			System.out.println(++count + ": " +key.interestOps());
+			System.out.println(++count + " - " + ++number + ": "+key.interestOps());
 			it.remove();
 			// Is a new connection coming in?
 			if (key.isAcceptable()) {

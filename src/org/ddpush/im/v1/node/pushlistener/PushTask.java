@@ -108,15 +108,17 @@ public class PushTask implements Runnable {
 
 	@Override
 	public synchronized void run() {
-		System.out.println("---" + ++count);
 		if(listener == null || channel == null){
+			System.out.println("listener or channel null");
 			return;
 		}
 		
 		if(key == null){
+			System.out.println("key null");
 			return;
 		}
 		if(isCancel){
+			System.out.println("canceled");
 			return;
 		}
 		try{
@@ -146,6 +148,7 @@ public class PushTask implements Runnable {
 		}
 		
 		key = null;
+		System.out.println(Thread.currentThread() + "---" + count + " end");
 
 	}
 	public String byteBufferToString(ByteBuffer buffer) {
@@ -171,12 +174,12 @@ public class PushTask implements Runnable {
 			System.out.println("end of Stream");
 			throw new Exception("end of stream");
 		}
-		System.out.println("------");
-		int limit = buffer.limit();
-		int position = buffer.position();
-System.out.println(Thread.currentThread() + "===" +  position + " " + limit + byteBufferToString(buffer) + "===");
-		buffer.limit(limit);
-		buffer.position(position);
+		
+//		int limit = buffer.limit();
+//		int position = buffer.position();
+//System.out.println(Thread.currentThread() + "===" +  position + " " + limit + byteBufferToString(buffer) + "===");
+//		buffer.limit(limit);
+//		buffer.position(position);
 
 		if(this.calcWritePending() == false){
 			return;
@@ -224,31 +227,32 @@ System.out.println(Thread.currentThread() + "===" +  position + " " + limit + by
 		return writePending;
 	}
 	
-	private synchronized boolean calcWritePending() throws Exception{
-		if(this.writePending == false){
-			if(buffer.position() < Constant.PUSH_MSG_HEADER_LEN){
+	private synchronized boolean calcWritePending() throws Exception {
+		if (!writePending) {
+			if (buffer.position() < Constant.PUSH_MSG_HEADER_LEN) {
 				this.writePending = false;
-			}else{
-				int bodyLen = (int)ByteBuffer.wrap(bufferArray, Constant.PUSH_MSG_HEADER_LEN - 2, 2).getChar();
-				if(bodyLen > maxContentLength){
-					throw new java.lang.IllegalArgumentException("content length "+bodyLen+" larger than max "+maxContentLength);
+			} else {
+				int bodyLen = (int) ByteBuffer.wrap(bufferArray, Constant.PUSH_MSG_HEADER_LEN - 2, 2).getChar();
+				if (bodyLen > maxContentLength) {
+					throw new java.lang.IllegalArgumentException(
+							"content length " + bodyLen + " larger than max " + maxContentLength);
 				}
-				if(bodyLen == 0){
+				if (bodyLen == 0) {
 					this.writePending = true;
-				}else{
-					if(buffer.limit() != Constant.PUSH_MSG_HEADER_LEN + bodyLen){
+				} else {
+					if (buffer.limit() != Constant.PUSH_MSG_HEADER_LEN + bodyLen) {
 						buffer.limit(Constant.PUSH_MSG_HEADER_LEN + bodyLen);
-					}else{
-						if(buffer.position() == Constant.PUSH_MSG_HEADER_LEN + bodyLen){
+					} else {
+						if (buffer.position() == Constant.PUSH_MSG_HEADER_LEN + bodyLen) {
 							this.writePending = true;
 						}
 					}
 				}
 			}
-		}else{//this.writePending == true
-			if(buffer.hasRemaining()){
+		} else {// this.writePending == true
+			if (buffer.hasRemaining()) {
 				this.writePending = true;
-			}else{
+			} else {
 				this.writePending = false;
 			}
 		}

@@ -190,7 +190,7 @@ public class Pusher {
 //			byte[] tmp = new byte[8];
 //			ByteBuffer.wrap(tmp).putLong(255);
 			pusher = new Pusher(null, 49988, 500000);
-			result = pusher.push0x11Message(StringUtil.md5Byte("123"), 256);
+			result = pusher.push0x11Message(StringUtil.md5Byte("123"), 1111);
 //			 result = pusher.push0x20Message(StringUtil.hexStringToByteArray("2cb1abca847b4491bc2b206b592b64fd"),
 //			 "cmd=ntfurl|title=通知标题|content=通知内容|tt=提示标题|url=/m/admin/eml/inbox/list".getBytes("UTF-8"));
 //			result = pusher.push0x10Message(StringUtil.hexStringToByteArray("2cb1abca847b4491bc2b206b592b64fd"));
