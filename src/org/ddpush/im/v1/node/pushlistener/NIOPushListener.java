@@ -254,9 +254,9 @@ public class NIOPushListener implements Runnable {
 					//local2
 					//remote
 					// local add
+					// test
 					System.out.println(key2.interestOps() +" -- " + " -- "+ key2.channel() + " -- "+ key2.selector());
  					System.out.println(channel.getLocalAddress() + " -- " + channel.getRemoteAddress());
-					// test
 					// add something
 				} catch (Exception e) {
 					e.printStackTrace();
