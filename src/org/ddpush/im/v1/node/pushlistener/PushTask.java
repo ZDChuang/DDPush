@@ -249,7 +249,8 @@ public class PushTask implements Runnable {
 					}
 				}
 			}
-		} else {// this.writePending == true
+			// this.writePending == true
+		} else {
 			if (buffer.hasRemaining()) {
 				this.writePending = true;
 			} else {
