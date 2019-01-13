@@ -98,8 +98,12 @@ public class PushTask implements Runnable {
 				}
 			}
 		};
+
 		listener.addEvent(r);
+
 		try {
+			// Causes the first selection operation that has not yet returned to
+			// return immediately.
 			key.selector().wakeup();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -133,7 +137,6 @@ public class PushTask implements Runnable {
 			} else {// has package
 
 				// try send pkg and place hasPkg=false
-				//
 				// register write ops if not enough buffer
 				// if(key.isWritable()){
 				writeRes();
@@ -285,9 +288,7 @@ public class PushTask implements Runnable {
 				csm.onPushMessage(pm);
 			} catch (Exception e) {
 			}
-			;
 		}
-
 	}
 
 	@Override
