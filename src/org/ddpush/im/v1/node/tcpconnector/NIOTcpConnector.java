@@ -188,11 +188,11 @@ public class NIOTcpConnector implements Runnable {
 
 	private void handleTimeout() {
 		Selector tmpsel = selector;
-		Set keys = (stoped == false && tmpsel != null) ? tmpsel.keys() : null;
+		Set<SelectionKey> keys = (stoped == false && tmpsel != null) ? tmpsel.keys() : null;
 		if (keys == null) {
 			return;
 		}
-		Iterator it = keys.iterator();
+		Iterator<SelectionKey> it = keys.iterator();
 		long now = System.currentTimeMillis();
 		// cancel timeout and no interestOps keys,close socket and channel
 		while (it.hasNext()) {
